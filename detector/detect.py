@@ -1,4 +1,3 @@
-# detector/detect.py
 # Runs YOLO inference on a single frame and returns raw detections
 
 from typing import List, Dict
@@ -9,21 +8,7 @@ from config.suspicious_items import CONFIDENCE_THRESHOLD
 
 
 def detect_objects(model: YOLO, frame: np.ndarray) -> List[Dict]:
-    """
-    Run YOLOv8 inference on a single video frame.
-
-    Args:
-        model:  Loaded YOLO model.
-        frame:  BGR numpy array (as returned by OpenCV).
-
-    Returns:
-        List of detection dicts, each containing:
-            {
-                "label":      str,   # class name e.g. "cell phone"
-                "confidence": float, # 0-1
-                "bbox":       [x1, y1, x2, y2]  # pixel coords
-            }
-    """
+    
     results = model(frame, verbose=False)
     detections: List[Dict] = []
 
