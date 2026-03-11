@@ -1,6 +1,4 @@
-# processing/postprocess.py
 # Filters detections down to suspicious items only,
-# deduplicates across frames, and formats the final output.
 
 from typing import List, Dict
 from collections import defaultdict
@@ -10,15 +8,7 @@ from processing.timestamp import seconds_to_timestamp
 
 
 class SuspicionTracker:
-    """
-    Stateful tracker that:
-    1. Filters raw YOLO detections to suspicious classes only.
-    2. Requires MIN_FRAME_STREAK consecutive detections before reporting
-       (reduces spurious single-frame false positives).
-    3. Records the FIRST timestamp each item is reliably confirmed.
-    4. Avoids duplicate events (same item flagged only once per appearance
-       window, then resets after it disappears for >gap_frames frames).
-    """
+    
 
     def __init__(self, gap_frames: int = 15):
         """
@@ -26,25 +16,16 @@ class SuspicionTracker:
             gap_frames: If an item disappears for this many consecutive
                         sampled frames it's considered a new event next time.
         """
-        self._streak: Dict[str, int] = defaultdict(int)       # item → consecutive frame count
-        self._confirmed: Dict[str, bool] = defaultdict(bool)  # item → already reported?
-        self._absent: Dict[str, int] = defaultdict(int)       # item → absent frame count
+        self._streak: Dict[str, int] = defaultdict(int)       
+        self._confirmed: Dict[str, bool] = defaultdict(bool)  
+        self._absent: Dict[str, int] = defaultdict(int)      
         self._gap_frames = gap_frames
 
-        # Final results: list of {item, timestamp}
+        
         self.events: List[Dict] = []
 
     def process_frame(self, detections: List[Dict], timestamp_seconds: float) -> List[Dict]:
-        """
-        Feed one frame's worth of detections into the tracker.
-
-        Args:
-            detections:        Output of detect_objects() for this frame.
-            timestamp_seconds: Elapsed seconds at this frame.
-
-        Returns:
-            List of NEW suspicious events detected in this frame (may be empty).
-        """
+        
         # Collect suspicious labels seen in this frame
         seen_in_frame = set()
         for det in detections:
@@ -60,11 +41,7 @@ class SuspicionTracker:
                 self._streak[item] += 1
 
                 # Reset confirmed flag if item disappeared long enough
-                # (handled in the absent branch below — on re-appearance
-                #  the absent counter was already reset to 0 above, so
-                #  nothing extra needed here)
 
-                # Check if we've hit the streak threshold for a new event
                 if (
                     self._streak[item] >= MIN_FRAME_STREAK
                     and not self._confirmed[item]
@@ -82,20 +59,14 @@ class SuspicionTracker:
                 self._streak[item] = 0
                 self._absent[item] += 1
 
-                # If item has been gone long enough, allow re-detection
+
                 if self._absent[item] >= self._gap_frames:
                     self._confirmed[item] = False
 
         return new_events
 
     def get_results(self) -> Dict:
-        """
-        Return the final results in the required output format:
-        { "suspicious_item": "timestamp", ... }
-
-        When the same item appears multiple times, entries are suffixed
-        with an occurrence index: "cell phone #1", "cell phone #2", …
-        """
+        
         output = {}
         counts: Dict[str, int] = defaultdict(int)
 
@@ -117,9 +88,7 @@ class SuspicionTracker:
 
 
 def build_summary(events: List[Dict], video_metadata: dict) -> dict:
-    """
-    Wrap events in a richer summary payload for the API response.
-    """
+    
     result_map = {}
     counts: Dict[str, int] = defaultdict(int)
 
