@@ -1,5 +1,4 @@
-# app.py
-# FastAPI server — exposes /detect-suspicious endpoint
+# FastAPI server
 
 import os
 import uuid
@@ -16,21 +15,21 @@ from detector.detect import detect_objects
 from processing.video_reader import extract_frames, get_video_metadata
 from processing.postprocess import SuspicionTracker, build_summary
 
-# ── Logging ──────────────────────────────────────────────────────────────────
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
 
-# ── App ───────────────────────────────────────────────────────────────────────
+
 app = FastAPI(
     title="Cheat Detection API",
     description="Upload an exam video; receive timestamps of suspicious objects.",
     version="1.0.0",
 )
 
-# Pre-load the model at startup so the first request isn't slow
+
 @app.on_event("startup")
 async def startup_event():
     logger.info("Pre-loading YOLO model...")
@@ -38,13 +37,13 @@ async def startup_event():
     logger.info("Model ready.")
 
 
-# ── Health check ──────────────────────────────────────────────────────────────
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
 
-# ── Main endpoint ─────────────────────────────────────────────────────────────
+
 @app.post("/detect-suspicious")
 async def detect_suspicious(
     file: UploadFile = File(..., description="Video file to analyse"),
@@ -59,18 +58,8 @@ async def detect_suspicious(
         description="YOLO model variant: yolov8n.pt | yolov8s.pt | yolov8m.pt",
     ),
 ):
-    """
-    Analyse a video file for suspicious objects.
+    
 
-    Returns a JSON object mapping each suspicious item to the timestamp
-    at which it was first reliably detected:
-
-        {
-          "suspicious_item": "MM:SS.mmm",
-          ...
-        }
-    """
-    # ── Validate file type ────────────────────────────────────────────────────
     allowed_extensions = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
     suffix = Path(file.filename or "video.mp4").suffix.lower()
     if suffix not in allowed_extensions:
@@ -80,7 +69,7 @@ async def detect_suspicious(
                    f"Allowed: {', '.join(allowed_extensions)}",
         )
 
-    # ── Save upload to a temp file ────────────────────────────────────────────
+
     tmp_path = os.path.join(tempfile.gettempdir(), f"{uuid.uuid4()}{suffix}")
     try:
         content = await file.read()
@@ -88,14 +77,12 @@ async def detect_suspicious(
             f.write(content)
         logger.info(f"Saved upload to {tmp_path} ({len(content)/1024:.1f} KB)")
 
-        # ── Load model ────────────────────────────────────────────────────────
+
         model = load_model(model_size)
 
-        # ── Get video metadata ────────────────────────────────────────────────
         metadata = get_video_metadata(tmp_path)
         logger.info(f"Video metadata: {metadata}")
 
-        # ── Process frames ────────────────────────────────────────────────────
         tracker = SuspicionTracker()
         frames_processed = 0
 
@@ -116,12 +103,12 @@ async def detect_suspicious(
             f"Events: {len(tracker.events)}"
         )
 
-        # ── Build response ────────────────────────────────────────────────────
+
         summary = build_summary(tracker.events, metadata)
 
         return JSONResponse(
             content={
-                # Primary output as required by the spec
+
                 **summary["suspicious_items"],
                 
                 "_meta": {
@@ -146,10 +133,9 @@ async def detect_suspicious(
             os.remove(tmp_path)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# RUNPOD HANDLER — this block only runs when RUNPOD_MODE=1
-# When running locally via uvicorn, this block is ignored entirely
-# ─────────────────────────────────────────────────────────────────────────────
+
+# RUNPOD HANDLER - RUNPOD_MODE=1
+
 
 def _run_detection(video_bytes: bytes, sample_rate: int, model_size: str) -> dict:
     """
@@ -191,22 +177,10 @@ if os.environ.get("RUNPOD_MODE") == "1":
     import runpod
 
     def runpod_handler(job):
-        """
-        RunPod calls this function with every job.
-
-        Expected input JSON:
-        {
-            "input": {
-                "video_b64":   "<base64 encoded video>",
-                "sample_rate": 5,          (optional, default 5)
-                "model_size":  "yolov8n.pt" (optional)
-            }
-        }
-        """
+        
         logger.info(f"RunPod job received: {job['id']}")
         job_input = job["input"]
 
-        # Validate input
         if "video_b64" not in job_input:
             return {"error": "Missing required field: video_b64"}
 
@@ -223,7 +197,7 @@ if os.environ.get("RUNPOD_MODE") == "1":
             logger.exception(f"Job {job['id']} failed")
             return {"error": str(e)}
 
-    # RunPod starts the worker loop here
+    
     logger.info("Starting in RunPod serverless mode...")
-    load_model("yolov8n.pt")   # pre-load before accepting jobs
+    load_model("yolov8n.pt")   
     runpod.serverless.start({"handler": runpod_handler})
