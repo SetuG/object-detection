@@ -2,6 +2,7 @@
 
 def frame_to_timestamp(frame_index: int, fps: float) -> str:
     
+    
     total_seconds = frame_index / fps
     minutes = int(total_seconds // 60)
     seconds = total_seconds % 60
@@ -9,6 +10,7 @@ def frame_to_timestamp(frame_index: int, fps: float) -> str:
 
 
 def seconds_to_timestamp(seconds: float) -> str:
+    
     
     minutes = int(seconds // 60)
     secs = seconds % 60

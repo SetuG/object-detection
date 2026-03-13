@@ -24,7 +24,7 @@ COCO_SUSPICIOUS_CLASSES = {
     "mouse": "mouse",
 }
 
-# Confidence threshold — detections below this are ignored
+
 CONFIDENCE_THRESHOLD = 0.40
 
 # Minimum number of consecutive frames an item must appear

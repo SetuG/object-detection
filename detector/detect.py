@@ -1,4 +1,3 @@
-# detector/detect.py
 # Runs YOLO inference on a single frame and returns raw detections
 
 from typing import List, Dict

@@ -9,6 +9,7 @@ from processing.timestamp import seconds_to_timestamp
 
 class SuspicionTracker:
     
+    
 
     def __init__(self, gap_frames: int = 15):
         
@@ -63,6 +64,7 @@ class SuspicionTracker:
 
     def get_results(self) -> Dict:
         
+        
         output = {}
         counts: Dict[str, int] = defaultdict(int)
 
@@ -84,6 +86,7 @@ class SuspicionTracker:
 
 
 def build_summary(events: List[Dict], video_metadata: dict) -> dict:
+    
     
     result_map = {}
     counts: Dict[str, int] = defaultdict(int)
