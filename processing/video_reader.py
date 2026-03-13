@@ -1,4 +1,3 @@
-# processing/video_reader.py
 # Extracts frames from a video file at a configurable sample rate
 
 import cv2
@@ -12,18 +11,7 @@ def extract_frames(
     video_path: str,
     sample_every_n_frames: int = 5,
 ) -> Generator[Tuple[int, float, any], None, None]:
-    """
-    Generator that yields sampled frames from a video file.
-
-    Args:
-        video_path:            Path to the video file.
-        sample_every_n_frames: Process 1 out of every N frames.
-                               Lower = more accurate but slower.
-                               Default 5 → ~6 fps on a 30fps video.
-
-    Yields:
-        Tuple of (frame_index, timestamp_seconds, frame_bgr)
-    """
+    
     cap = cv2.VideoCapture(video_path)
 
     if not cap.isOpened():
@@ -57,7 +45,7 @@ def extract_frames(
 
 
 def get_video_metadata(video_path: str) -> dict:
-    """Return basic metadata about a video file."""
+    
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Cannot open video file: {video_path}")

@@ -1,28 +1,24 @@
-# Dockerfile — optimised for RunPod GPU workers
-# Base image includes CUDA 11.8 + Python 3.10
-
-FROM runpod/base:0.4.0-cuda11.8.0
+FROM python:3.10-slim
 
 WORKDIR /app
 
-# System deps
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
     ffmpeg \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Python deps
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --timeout=300 \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    -r requirements.txt
 
-# Copy source
 COPY . .
 
-# Pre-download YOLO weights at build time so cold starts are fast
 RUN python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
 
 EXPOSE 8000

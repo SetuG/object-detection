@@ -1,6 +1,5 @@
-# config/suspicious_items.py
 # Items flagged as suspicious in an exam/test environment
-# These map directly to YOLO COCO class names
+
 
 SUSPICIOUS_ITEMS = [
     "cell phone",
@@ -29,5 +28,4 @@ COCO_SUSPICIOUS_CLASSES = {
 CONFIDENCE_THRESHOLD = 0.40
 
 # Minimum number of consecutive frames an item must appear
-# before it's considered a real detection (reduces false positives)
 MIN_FRAME_STREAK = 2
